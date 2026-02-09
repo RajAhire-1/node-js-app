@@ -37,33 +37,7 @@ With CI (this project):
 
 ## 🏗️ CI Architecture
 
-```text
-Developer Push / Pull Request
-            │
-            ▼
-     GitHub Repository
-            │
-            ▼
-   GitHub Actions Workflow
-            │
-            ├── Build Job
-            │     ├─ Node.js 18.x
-            │     ├─ Node.js 20.x
-            │     └─ Node.js 22.x
-            │
-            ├── Unit Test Job
-            │     ├─ Node.js 18.x
-            │     ├─ Node.js 20.x
-            │     └─ Node.js 22.x
-            │
-            ▼
-   Status Checks on Pull Request
-            │
-     ┌──────┴────────┐
-     │               │
- ❌ Failure       ✅ Success
- Merge Blocked    Merge Allowed
-````
+![Branch Protection](img/overview.png)
 
 ---
 
