@@ -1,160 +1,170 @@
+# GitHub Actions CI/CD Pipeline for Node.js Application
 
-# 🚀 GitHub Actions CI Pipeline for Node.js Application
+This repository demonstrates a production-grade Continuous Integration and Continuous Deployment (CI/CD) pipeline implemented using GitHub Actions for a Node.js application.
 
-This repository demonstrates a **production-ready Continuous Integration (CI) pipeline** built using **GitHub Actions** for a Node.js application.
-
-The pipeline is designed to ensure that **every code change is automatically built and tested** before it can be merged into the `main` branch.
-
----
-
-## 🔍 Overview
-
-In real-world software development, manually testing code before every merge is risky and unreliable.  
-This CI pipeline solves that problem by automatically validating code through builds and unit tests.
-
-### What this pipeline ensures
-
-- Code builds successfully
-- Unit tests pass on multiple Node.js versions
-- Broken code cannot reach the `main` branch
-- Developers get fast feedback via Pull Requests
+The pipeline ensures that all code changes are validated through automated builds and tests before merge, and that the application is packaged as a Docker image and published to Docker Hub after merge.
 
 ---
 
-## 🎯 Why This CI Pipeline Exists
+## Overview
 
-Without CI:
-- Bugs may enter production
-- Code may work on one Node.js version but fail on another
-- Manual testing slows down development
+This project implements a complete CI/CD workflow with the following objectives:
 
-With CI (this project):
-- Every Pull Request is automatically verified
-- Compatibility issues are caught early
-- Code quality is enforced by automation
+- Enforce automated validation before code merge
+- Protect the main branch from unstable code
+- Test application compatibility across multiple Node.js versions
+- Automatically build and publish Docker images
+- Maintain a reliable and repeatable delivery process
 
 ---
 
-## 🏗️ CI Architecture
+## CI/CD Architecture
 
 ```text
 Developer Push / Pull Request
-            │
-            ▼
+            |
+            v
      GitHub Repository
-            │
-            ▼
-   GitHub Actions Workflow
-            │
-            ├── Build Job
-            │     ├─ Node.js 18.x
-            │     ├─ Node.js 20.x
-            │     └─ Node.js 22.x
-            │
-            ├── Unit Test Job
-            │     ├─ Node.js 18.x
-            │     ├─ Node.js 20.x
-            │     └─ Node.js 22.x
-            │
-            ▼
-   Status Checks on Pull Request
-            │
-     ┌──────┴────────┐
-     │               │
- ❌ Failure       ✅ Success
- Merge Blocked    Merge Allowed
+            |
+            v
+   GitHub Actions (CI Workflow)
+            |
+            |-- Build Job
+            |     |-- Node.js 18.x
+            |     |-- Node.js 20.x
+            |     |-- Node.js 22.x
+            |
+            |-- Unit Test Job
+            |     |-- Node.js 18.x
+            |     |-- Node.js 20.x
+            |     |-- Node.js 22.x
+            |
+            v
+   Pull Request Status Checks
+            |
+        +---+---+
+        |       |
+     Failure   Success
+   Merge Blocked
+            |
+            v
+      Merge to main branch
+            |
+            v
+   GitHub Actions (CD Workflow)
+            |
+            |-- Docker Image Build
+            |-- Docker Hub Authentication
+            |-- Docker Image Push
+            |
+            v
+        Docker Hub Repository
 ````
 
 ---
 
-## ⚙️ How the CI Pipeline Is Created
+## Continuous Integration (CI)
 
-The CI pipeline is defined using a GitHub Actions workflow file named:
+### Workflow Configuration
 
-```
-integration.yml
-```
+* Workflow file: `integration.yml`
+* Trigger: Pull requests targeting the `main` branch
+* Purpose: Validate code correctness before merge
 
-### Step-by-step logic
+### CI Jobs
 
-1. **Trigger**
+* Build job to verify application compilation
+* Unit test job to validate application behavior
+* Matrix strategy for Node.js versions:
 
-   * The workflow runs automatically when a Pull Request is created or updated.
+  * 18.x
+  * 20.x
+  * 22.x
 
-2. **Matrix Strategy**
-
-   * The same jobs run on multiple Node.js versions:
-
-     * `18.x`
-     * `20.x`
-     * `22.x`
-   * This ensures compatibility across environments.
-
-3. **Build Job**
-
-   * Installs dependencies
-   * Runs the build command
-   * Fails immediately if the build breaks
-
-4. **Unit Test Job**
-
-   * Runs automated tests
-   * Ensures application logic is correct
-   * Prevents faulty code from being merged
+This ensures consistent behavior across commonly used Node.js runtimes.
 
 ---
 
-## 🔐 Branch Protection (Quality Gate)
+## Branch Protection Strategy
 
-To make CI effective, **branch protection rules** are applied to the `main` branch.
+The `main` branch is protected to enforce CI compliance.
 
-### Rules Applied
+### Protection Rules
 
 * Direct pushes to `main` are disabled
-* All changes must go through a Pull Request
-* All GitHub Actions checks must pass
+* All changes must be introduced through pull requests
+* All CI checks must pass before merge is allowed
 
-This guarantees that **CI results control the merge process**, not humans.
-
-![Branch Protection](img/branch_protection_rule.png)
+![Branch Protection Rule](img/branch_protection_rule.png)
 
 ---
 
-## ✅ Successful Pipeline Execution
+## Successful CI Execution
 
-When:
-
-* All build jobs succeed
-* All unit tests pass
-* No conflicts exist
-
-GitHub enables the **Merge** button.
+When all build and unit test jobs succeed, GitHub allows the pull request to be merged.
 
 ![All Checks Passed](img/all_checks_passed.png)
 
-![Build Success](img/githubaction_build_success.png)
+![Build and Test Success](img/githubaction_build_success.png)
 
-![All Workflows](img/all_workflows_in_actions.png)
+![GitHub Actions Workflow Runs](img/all_workflows_in_actions.png)
 
 ---
 
-## ❌ Failing Test Case (Proof of CI Enforcement)
+## Failing Test Case (Quality Enforcement)
 
-This project also demonstrates a **real failing scenario**.
-
-When a unit test fails:
+If any unit test fails:
 
 * The workflow reports failure
 * Remaining jobs may be cancelled
-* Merge is automatically blocked
+* The merge option is automatically blocked
 
 ![Failing Test Case](img/failing_testcase.png)
 
-This proves that the CI pipeline is **actually enforcing quality**, not just running jobs.
+This confirms that CI acts as a strict quality gate.
 
 ---
 
-## 🧑‍💻 Developer Workflow
+## Continuous Deployment (CD)
+
+After a successful merge into the `main` branch, the deployment workflow runs automatically.
+
+### Workflow Configuration
+
+* Workflow file: `deploy.yml`
+* Trigger: Push events on the `main` branch
+* Purpose: Build and publish a Docker image
+
+### Deployment Steps
+
+1. Checkout source code
+2. Authenticate with Docker Hub using GitHub Secrets
+3. Build Docker image
+4. Push Docker image to Docker Hub
+
+Docker image published:
+
+```
+rajahire326/next-js-app:latest
+```
+
+![Deployment Workflow](img/deploy_application.png)
+
+---
+
+## Final Output: Docker Hub Repository
+
+The final result of the CI/CD pipeline is a successfully published Docker image available on Docker Hub.
+
+* Repository: `rajahire326/next-js-app`
+* Tag: `latest`
+* Image built and pushed automatically using GitHub Actions
+
+![Docker Hub Final Output](img/final_output.png)
+
+---
+
+## Developer Workflow
 
 ### Clone Repository
 
@@ -162,7 +172,7 @@ This proves that the CI pipeline is **actually enforcing quality**, not just run
 git clone https://github.com/RajAhire-1/node-js-app.git
 ```
 
-![Git Clone](img/git_clone_repo.png)
+![Repository Clone](img/git_clone_repo.png)
 
 ---
 
@@ -172,38 +182,40 @@ git clone https://github.com/RajAhire-1/node-js-app.git
 git push --set-upstream origin workflow/integration
 ```
 
-![Git History](img/git_history.png)
+![Git Push History](img/git_history.png)
 
-Once pushed:
+After push:
 
-* Pull Request is opened
-* CI runs automatically
-* Merge depends on CI result
-
----
-
-## 🧠 Key Learnings
-
-* CI should block broken code automatically
-* Testing across versions prevents runtime issues
-* Branch protection makes CI meaningful
-* GitHub Actions is suitable for production workflows
+* Pull request is created
+* CI workflow runs automatically
+* Merge is permitted only after successful CI
+* CD workflow runs after merge
 
 ---
 
-## 🏆 Skills Demonstrated
+## Key Outcomes
 
-* GitHub Actions
-* CI Pipeline Design
-* Node.js Build & Unit Testing
-* Branch Protection Rules
-* DevOps Best Practices
+* Automated validation of code quality
+* Guaranteed stability of the main branch
+* Automated Docker image publishing
+* Fully automated CI/CD lifecycle
 
 ---
 
-## 👤 Author
+## Skills Demonstrated
 
-**Raj Ahire**
+* GitHub Actions CI/CD pipelines
+* Node.js build and testing automation
+* Docker image creation and publishing
+* Branch protection and quality gates
+* End-to-end DevOps workflow design
+
+---
+
+## Author
+
+Raj Ahire
 DevOps | Cloud | CI/CD
+
 
 
